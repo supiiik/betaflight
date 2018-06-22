@@ -213,16 +213,6 @@ static void validateAndFixConfig(void)
 
     if (featureConfigured(FEATURE_RX_PARALLEL_PWM)) {
         featureClear(FEATURE_RX_SERIAL | FEATURE_RX_MSP | FEATURE_RX_PPM | FEATURE_RX_SPI);
-#if defined(STM32F10X)
-        // rssi adc needs the same ports
-        featureClear(FEATURE_RSSI_ADC);
-        // current meter needs the same ports
-        if (batteryConfig()->currentMeterSource == CURRENT_METER_ADC) {
-            batteryConfigMutable()->currentMeterSource = CURRENT_METER_NONE;
-        }
-#endif // STM32F10X
-        // software serial needs free PWM ports
-        featureClear(FEATURE_SOFTSERIAL);
     }
 
 #ifdef USE_SOFTSPI
@@ -254,6 +244,26 @@ static void validateAndFixConfig(void)
         ) {
         rxConfigMutable()->rssi_src_frame_errors = false;
     }
+
+    if ((
+#if defined(USE_RC_SMOOTHING_FILTER)
+        rxConfig()->rc_smoothing_type == RC_SMOOTHING_TYPE_INTERPOLATION &&
+#endif
+        rxConfig()->rcInterpolation == RC_SMOOTHING_OFF) || rxConfig()->rcInterpolationChannels == INTERPOLATION_CHANNELS_T) {
+        for (unsigned i = 0; i < MAX_PROFILE_COUNT; i++) {
+            pidProfilesMutable(i)->dtermSetpointWeight = 0;
+        }
+    }
+
+#if defined(USE_THROTTLE_BOOST)
+    if (!(rxConfig()->rcInterpolationChannels == INTERPOLATION_CHANNELS_RPYT
+        || rxConfig()->rcInterpolationChannels == INTERPOLATION_CHANNELS_T
+        || rxConfig()->rcInterpolationChannels == INTERPOLATION_CHANNELS_RPT)) {
+        for (unsigned i = 0; i < MAX_PROFILE_COUNT; i++) {
+            pidProfilesMutable(i)->throttle_boost = 0;
+        }
+    }
+#endif
 #endif // USE_OSD_SLAVE
 
     if (!isSerialConfigValid(serialConfig())) {

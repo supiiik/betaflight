@@ -39,6 +39,8 @@ typedef enum rc_alias {
     AUX8
 } rc_alias_e;
 
+#define PRIMARY_CHANNEL_COUNT (THROTTLE + 1)
+
 typedef enum {
     THROTTLE_LOW = 0,
     THROTTLE_HIGH
@@ -74,6 +76,13 @@ typedef enum {
     RC_SMOOTHING_DERIVATIVE_BIQUAD
 } rcSmoothingDerivativeFilter_e;
 
+typedef enum {
+    RC_SMOOTHING_VALUE_INPUT_AUTO,
+    RC_SMOOTHING_VALUE_INPUT_ACTIVE,
+    RC_SMOOTHING_VALUE_DERIVATIVE_AUTO,
+    RC_SMOOTHING_VALUE_DERIVATIVE_ACTIVE,
+    RC_SMOOTHING_VALUE_AVERAGE_FRAME
+} rcSmoothingInfoType_e;
 
 #define ROL_LO (1 << (2 * ROLL))
 #define ROL_CE (3 << (2 * ROLL))
